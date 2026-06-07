@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Woordenschat Trainer</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #657085;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --good: #16a34a;
+      --bad: #dc2626;
+      --soft: #eaf1ff;
+      --border: #dbe3f0;
+      --shadow: 0 18px 45px rgba(26, 42, 74, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #dbeafe 0, transparent 32%),
+        linear-gradient(135deg, #f8fbff, var(--bg));
+    }
+
+    .app {
+      width: min(980px, 94vw);
+      margin: 0 auto;
+      padding: 28px 0 50px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.1rem);
+      letter-spacing: -0.04em;
+    }
+
+    .title p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .badge {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: var(--shadow);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .card {
+      background: rgba(255,255,255,.88);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: clamp(18px, 4vw, 34px);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .mode {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 20px;
+      padding: 22px;
+      text-align: left;
+      cursor: pointer;
+      transition: .18s ease;
+      min-height: 160px;
+    }
+
+    .mode:hover {
+      transform: translateY(-3px);
+      border-color: #93b4ff;
+      box-shadow: 0 14px 30px rgba(37,99,235,.12);
+    }
+
+    .mode strong {
+      display: block;
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .mode span {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 18px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: .16s ease;
+      font-size: 1rem;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .primary:hover { background: var(--primary-dark); }
+
+    .secondary {
+      background: var(--soft);
+      color: var(--primary-dark);
+    }
+
+    .good {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .bad {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .hidden { display: none !important; }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+      color: var(--muted);
+    }
+
+    .progress {
+      height: 12px;
+      width: 100%;
+      background: #e7edf7;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #60a5fa, #2563eb);
+      border-radius: inherit;
+      transition: width .25s ease;
+    }
+
+    .question {
+      min-height: 210px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, #ffffff, #f8fbff);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px;
+      margin-bottom: 22px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: .95rem;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 800;
+    }
+
+    .big {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 850;
+      letter-spacing: -0.03em;
+    }
+
+    .answer {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: #f1f5f9;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px 16px;
+      font-size: 1.1rem;
+      outline: none;
+      margin: 14px 0;
+    }
+
+    input:focus {
+      border-color: #93b4ff;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+      background: white;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 2rem;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .pill {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    .toast {
+      margin-top: 12px;
+      font-weight: 800;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 720px) {
+      header { align-items: flex-start; flex-direction: column; }
+      .grid, .stats { grid-template-columns: 1fr; }
+      .badge { white-space: normal; }
+      .actions button { width: 100%; }
+      .pill { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="title">
+        <h1>Woordenschat Trainer</h1>
+        <p>Oefen woorden, betekenissen en je foutjes opnieuw met invulzinnen.</p>
+      </div>
+      <div class="badge"><span id="totalWords">0</span> woorden</div>
+    </header>
+
+    <section id="home" class="card">
+      <h2>Kies je oefening</h2>
+      <div class="grid">
+        <button class="mode" onclick="startQuiz('woord')">
+          <strong>Woord → betekenis</strong>
+          <span>Je ziet het woord. Zeg hardop of in je hoofd de betekenis. Klik daarna op “Toon antwoord”.</span>
+        </button>
+        <button class="mode" onclick="startQuiz('betekenis')">
+          <strong>Betekenis → woord</strong>
+          <span>Je ziet de betekenis. Raad welk woord erbij hoort. Klik daarna op “Toon antwoord”.</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="quiz" class="card hidden">
+      <div class="topline">
+        <button class="ghost" onclick="goHome()">← Terug</button>
+        <span id="counter"></span>
+      </div>
+      <div class="progress"><div id="bar" class="bar"></div></div>
+
+      <div class="question">
+        <div>
+          <div id="questionLabel" class="label"></div>
+          <div id="questionText" class="big"></div>
+          <div id="answerBox" class="answer hidden"></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="showBtn" class="primary" onclick="showAnswer()">Toon antwoord</button>
+        <button id="goodBtn" class="good hidden" onclick="markAnswer(true)">Goed</button>
+        <button id="badBtn" class="bad hidden" onclick="markAnswer(false)">Fout</button>
+      </div>
+    </section>
+
+    <section id="result" class="card hidden">
+      <h2>Resultaat</h2>
+      <div class="stats">
+        <div class="stat"><strong id="correctCount">0</strong><span>goed</span></div>
+        <div class="stat"><strong id="wrongCount">0</strong><span>fout</span></div>
+        <div class="stat"><strong id="percent">0%</strong><span>score</span></div>
+      </div>
+      <div class="actions">
+        <button class="primary" onclick="startWrongPractice()">Foute woordjes oefenen</button>
+        <button class="secondary" onclick="startQuiz(currentMode)">Opnieuw oefenen</button>
+        <button class="ghost" onclick="goHome()">Andere modus</button>
+      </div>
+      <div id="wrongList" class="list"></div>
+    </section>
+
+    <section id="practice" class="card hidden">
+      <div class="topline">
+        <button class="ghost" onclick="goResult()">← Resultaat</button>
+        <span id="practiceCounter"></span>
+      </div>
+      <div class="progress"><div id="practiceBar" class="bar"></div></div>
+
+      <div class="question">
+        <div>
+          <div class="label">Vul het verborgen woord in</div>
+          <div id="sentence" class="big" style="font-size:clamp(1.25rem,3vw,2rem);line-height:1.35"></div>
+        </div>
+      </div>
+
+      <input id="practiceInput" autocomplete="off" placeholder="Typ het woord hier..." onkeydown="if(event.key==='Enter') checkPractice()" />
+      <div class="actions">
+        <button class="primary" onclick="checkPractice()">Controleer</button>
+        <button class="secondary" onclick="revealPractice()">Toon antwoord</button>
+      </div>
+      <div id="practiceFeedback" class="toast"></div>
+    </section>
+
+    <footer>Tip: zet deze file als <strong>index.html</strong> in je GitHub Pages repository.</footer>
+  </main>
+
+  <script>
+    const words = [
+      {w:"associatie", a:"de", b:"het onbewust verbinden van de ene gedachte met de andere", s:"Bij het ruiken van zonnecrème maakte ze meteen een ___ met vakantie."},
+      {w:"homoniem", a:"het", b:"woord dat hetzelfde klinkt en net zo geschreven wordt als een ander woord, maar een heel andere betekenis heeft", s:"Het woord ‘bank’ is een ___, want het kan een zitmeubel of een geldinstelling zijn."},
+      {w:"etymologie", a:"de", b:"de herkomst van woorden", s:"In de les onderzochten ze de ___ van het woord."},
+      {w:"connotatie", a:"de", b:"gevoelswaarde, ondertoon of bijklank van een woord", s:"Het woord ‘krot’ heeft een negatieve ___."},
+      {w:"googelen", a:"", b:"zoeken naar informatie op het internet", s:"Voor haar spreekbeurt moest ze nog extra informatie ___."},
+      {w:"attachment", a:"de/het", b:"bestand dat je met een e-mail meestuurt", s:"Vergeet het document niet als ___ toe te voegen aan je mail."},
+      {w:"audiovisueel", a:"", b:"combinatie van geluid en beeld", s:"De presentatie was ___, met video én geluid."},
+      {w:"nagenoeg", a:"", b:"zo goed als, vrijwel", s:"Ze kende ___ alle woordjes van de lijst."},
+      {w:"expliciet", a:"", b:"uitdrukkelijk, letterlijk zo gezegd", s:"De leerkracht zei ___ dat er morgen een toets was."},
+      {w:"vintage", a:"", b:"iets wat door de ouderwetse uitstraling juist modieus is", s:"Die jas is oud, maar door de stijl toch helemaal ___."},
+      {w:"tekstueel", a:"", b:"met betrekking tot de tekst", s:"De vraag was ___ moeilijk, omdat je goed moest lezen."},
+      {w:"visueel", a:"", b:"gebaseerd op wat je ziet of waarneemt", s:"Een grafiek geeft informatie op een ___ manier."},
+      {w:"toegankelijkheid", a:"de", b:"gemakkelijk te begrijpen of toegang te krijgen tot iets", s:"De ___ van de website is belangrijk voor iedereen."},
+      {w:"militant", a:"de", b:"actief lid van een politieke partij of iemand die sterk ijvert voor iets", s:"De ___ voerde actie voor een beter klimaatbeleid."},
+      {w:"rakelings", a:"", b:"vlak langs, bijna rakend", s:"De bal vloog ___ langs het raam."},
+      {w:"bulken van", a:"", b:"in overvloed hebben", s:"Het museum bleek te ___ prachtige schilderijen."},
+      {w:"debuut", a:"het", b:"eerste optreden voor publiek of eerste werk van een schrijver", s:"Haar eerste roman was een indrukwekkend ___."},
+      {w:"afleiden", a:"", b:"opmaken", s:"Uit zijn gezicht kon ik ___ dat hij zenuwachtig was."},
+      {w:"aanhalen", a:"", b:"aanvoeren", s:"De leerling kon drie argumenten ___."},
+      {w:"situering", a:"de", b:"ligging", s:"De ___ van het dorp is ideaal: dicht bij zee en bos."},
+      {w:"typisch", a:"", b:"kenmerkend", s:"Dat gedrag is heel ___ voor hem."},
+      {w:"zich verhouden tot", a:"", b:"staan tot", s:"Hoe moet deze uitspraak ___ de feiten?"},
+      {w:"aanzetten tot", a:"", b:"aansporen", s:"De campagne wil jongeren ___ meer te lezen."},
+      {w:"beschouwen", a:"", b:"aanzien, bekijken", s:"We kunnen dit probleem vanuit verschillende kanten ___."},
+      {w:"betrekken bij", a:"", b:"verwikkelen in", s:"Ze wilden haar niet ___ het conflict."},
+      {w:"constructief", a:"", b:"opbouwend", s:"Zijn kritiek was streng, maar wel ___."},
+      {w:"cursief", a:"", b:"schuingedrukt", s:"In de tekst stond de titel ___ gedrukt."},
+      {w:"impact", a:"de", b:"invloed", s:"De toespraak had veel ___ op het publiek."},
+      {w:"omschrijven", a:"", b:"kenmerken, weergeven", s:"Kun je dat begrip in je eigen woorden ___?"},
+      {w:"oproepen", a:"", b:"uitnodigen, aansporen, aanzetten", s:"De directeur wilde iedereen ___ om rustig te blijven."},
+      {w:"verantwoorden", a:"", b:"verdedigen, rechtvaardigen", s:"Hij moest zijn keuze voor de klas ___."},
+      {w:"verrichten", a:"", b:"doen", s:"De onderzoekers moesten veel metingen ___."},
+      {w:"perspectief", a:"het", b:"standpunt, gezichtspunt", s:"Vanuit haar ___ zag de situatie er anders uit."},
+      {w:"illustrator", a:"de", b:"iemand die afbeeldingen of illustraties maakt bij een tekst", s:"De ___ maakte tekeningen bij het kinderboek."},
+      {w:"grafisch", a:"", b:"wat te maken heeft met voorstellingen in lijnen of figuren", s:"De data werden in een ___ overzicht gezet."},
+      {w:"virtueel", a:"", b:"schijnbaar aanwezig, denkbeeldig, digitaal", s:"Ze volgden een ___ rondleiding door het museum."},
+      {w:"immersie", a:"de", b:"figuurlijke onderdompeling", s:"Door de VR-bril voelde de ___ heel sterk aan."},
+      {w:"avatar", a:"de", b:"kleine afbeelding bij de naam van gebruikers op internetfora of chatprogramma’s", s:"Hij koos een grappige ___ voor zijn profiel."},
+      {w:"oriëntatie", a:"de", b:"het bepalen van de plaats waar men zich bevindt", s:"Met een kaart verbeterde ze haar ___ in de stad."},
+      {w:"intensiteit", a:"de", b:"mate van kracht of heftigheid", s:"De ___ van de storm nam plots toe."},
+      {w:"stelregel", a:"de", b:"regel of norm waar je je in ieder geval aan wilt houden", s:"Zijn ___ is dat eerlijkheid altijd het langst duurt."},
+      {w:"pottenkijker", a:"de", b:"bemoeial of nieuwsgierige toeschouwer", s:"De buurman stond als een echte ___ mee te kijken."},
+      {w:"studiegenoot", a:"de", b:"collega-student, medeleerling", s:"Ze werkte samen met een ___ aan het project."},
+      {w:"zijn/haar stoppen slaan door", a:"", b:"gezegd wanneer iemand in de war of overstuur is", s:"Toen hij het slechte nieuws hoorde, sloegen zijn ___ door."},
+      {w:"vlinderstrikje", a:"het", b:"strikje dat op de boord van een hemd gedragen wordt", s:"Bij zijn kostuum droeg hij een zwart ___."},
+      {w:"afgeladen", a:"", b:"propvol", s:"De trein zat helemaal ___ met reizigers."},
+      {w:"buitensissig", a:"", b:"vreemd, bizar", s:"Ze droeg een nogal ___ kostuum naar het feest."},
+      {w:"daadwerkelijk", a:"", b:"echt", s:"Was hij ___ ziek of deed hij alsof?"},
+      {w:"gelegenheid", a:"de", b:"mogelijkheid", s:"Ze kreeg de ___ om haar fout recht te zetten."},
+      {w:"schacht", a:"de", b:"kokervormige uitgraving", s:"De mijnwerker daalde af in de ___."},
+      {w:"heg", a:"de", b:"omheining van struiken", s:"Rond de tuin stond een hoge ___."},
+      {w:"hetzij", a:"", b:"om verschillende mogelijkheden aan te duiden", s:"Je mag ___ met de fiets, ___ met de bus komen."},
+      {w:"marmelade", a:"de", b:"jam, broodbeleg", s:"Op haar boterham smeerde ze sinaasappel___."},
+      {w:"activeren", a:"", b:"opstarten, aanmoedigen, stimuleren", s:"De code zal je account ___."},
+      {w:"afkomstig zijn", a:"", b:"komen van", s:"Deze kaas is ___ uit Frankrijk."},
+      {w:"anekdote", a:"de", b:"amusant, kort verhaal", s:"Opa vertelde een grappige ___ over vroeger."},
+      {w:"zich baseren op", a:"", b:"steunen op, uitgaan van", s:"De journalist moest zich ___ betrouwbare bronnen."},
+      {w:"beduidend", a:"", b:"merkbaar", s:"Vandaag is het ___ kouder dan gisteren."},
+      {w:"beschrijving", a:"de", b:"omschrijving", s:"De getuige gaf een duidelijke ___ van de dader."},
+      {w:"botsen op", a:"", b:"stuiten op", s:"Tijdens het onderzoek kun je ___ onverwachte problemen."},
+      {w:"consequent", a:"", b:"systematisch, volhardend", s:"Wie wil slagen, moet ___ blijven oefenen."},
+      {w:"geloofwaardig", a:"", b:"plausibel, aannemelijk", s:"Zijn verklaring klonk niet erg ___."},
+      {w:"geneigd zijn", a:"", b:"de neiging of drang voelen om", s:"Ik ben ___ om haar gelijk te geven."},
+      {w:"genuanceerd", a:"", b:"doordacht, met oog voor verschillende aspecten", s:"De leerling gaf een ___ antwoord."},
+      {w:"invloed", a:"de", b:"effect", s:"Sociale media hebben veel ___ op jongeren."},
+      {w:"introduceren", a:"", b:"lanceren, voorstellen", s:"Het bedrijf wil een nieuw product ___."},
+      {w:"opzicht", a:"het", b:"aspect, gezichtspunt", s:"In dat ___ heeft ze helemaal gelijk."},
+      {w:"representatief", a:"", b:"typerend, een goed beeld gevend van het geheel", s:"De steekproef was ___ voor de hele klas."}
+    ];
+
+    document.getElementById("totalWords").textContent = words.length;
+
+    let deck = [];
+    let currentMode = "woord";
+    let index = 0;
+    let wrong = [];
+    let answerVisible = false;
+    let practiceDeck = [];
+    let practiceIndex = 0;
+
+    const $ = id => document.getElementById(id);
+
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function show(section) {
+      ["home", "quiz", "result", "practice"].forEach(id => $(id).classList.add("hidden"));
+      $(section).classList.remove("hidden");
+    }
+
+    function startQuiz(mode) {
+      currentMode = mode;
+      deck = shuffle(words);
+      index = 0;
+      wrong = [];
+      answerVisible = false;
+      show("quiz");
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      if (index >= deck.length) return finishQuiz();
+
+      const item = deck[index];
+      const progress = (index / deck.length) * 100;
+      $("bar").style.width = progress + "%";
+      $("counter").textContent = `Vraag ${index + 1} van ${deck.length}`;
+      $("answerBox").classList.add("hidden");
+      $("showBtn").classList.remove("hidden");
+      $("goodBtn").classList.add("hidden");
+      $("badBtn").classList.add("hidden");
+      answerVisible = false;
+
+      if (currentMode === "woord") {
+        $("questionLabel").textContent = "Wat betekent dit woord?";
+        $("questionText").textContent = withArticle(item);
+      } else {
+        $("questionLabel").textContent = "Welk woord hoort bij deze betekenis?";
+        $("questionText").textContent = item.b;
+      }
+    }
+
+    function withArticle(item) {
+      return item.a ? `${item.a} ${item.w}` : item.w;
+    }
+
+    function showAnswer() {
+      const item = deck[index];
+      $("answerBox").textContent = currentMode === "woord" ? item.b : withArticle(item);
+      $("answerBox").classList.remove("hidden");
+      $("showBtn").classList.add("hidden");
+      $("goodBtn").classList.remove("hidden");
+      $("badBtn").classList.remove("hidden");
+      answerVisible = true;
+    }
+
+    function markAnswer(isGood) {
+      if (!isGood) wrong.push(deck[index]);
+      index++;
+      renderQuestion();
+    }
+
+    function finishQuiz() {
+      $("bar").style.width = "100%";
+      const correct = deck.length - wrong.length;
+      $("correctCount").textContent = correct;
+      $("wrongCount").textContent = wrong.length;
+      $("percent").textContent = Math.round((correct / deck.length) * 100) + "%";
+
+      const list = $("wrongList");
+      list.innerHTML = "";
+      if (wrong.length) {
+        wrong.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "pill";
+          div.innerHTML = `<strong>${withArticle(item)}</strong><span>${item.b}</span>`;
+          list.appendChild(div);
+        });
+      } else {
+        list.innerHTML = `<div class="pill"><strong>Perfect!</strong><span>Geen foute woordjes.</span></div>`;
+      }
+      show("result");
+    }
+
+    function startWrongPractice() {
+      if (!wrong.length) {
+        alert("Geen foute woordjes om opnieuw te oefenen.");
+        return;
+      }
+      practiceDeck = shuffle(wrong);
+      practiceIndex = 0;
+      show("practice");
+      renderPractice();
+    }
+
+    function renderPractice() {
+      if (practiceIndex >= practiceDeck.length) {
+        $("practiceFeedback").textContent = "Klaar! Alle foutjes zijn opnieuw geoefend.";
+        setTimeout(goResult, 1200);
+        return;
+      }
+      const item = practiceDeck[practiceIndex];
+      $("practiceCounter").textContent = `Foutje ${practiceIndex + 1} van ${practiceDeck.length}`;
+      $("practiceBar").style.width = (practiceIndex / practiceDeck.length) * 100 + "%";
+      $("sentence").textContent = item.s.replace("___", "_____");
+      $("practiceInput").value = "";
+      $("practiceFeedback").textContent = "";
+      $("practiceInput").focus();
+    }
+
+    function normalize(str) {
+      return str.trim().toLowerCase().replace(/[’']/g, "").replace(/\s+/g, " ");
+    }
+
+    function checkPractice() {
+      const item = practiceDeck[practiceIndex];
+      const user = normalize($("practiceInput").value);
+      const answer = normalize(item.w);
+      const alternatives = [answer];
+
+      if (item.w === "zijn/haar stoppen slaan door") alternatives.push("stoppen");
+      if (item.w === "marmelade") alternatives.push("marmelade");
+      if (item.w === "afkomstig zijn") alternatives.push("afkomstig");
+      if (item.w === "zich baseren op") alternatives.push("baseren op", "zich baseren op");
+      if (item.w === "botsen op") alternatives.push("botsen op");
+      if (item.w === "geneigd zijn") alternatives.push("geneigd");
+      if (item.w === "hetzij") alternatives.push("hetzij");
+
+      if (alternatives.includes(user)) {
+        $("practiceFeedback").style.color = "var(--good)";
+        $("practiceFeedback").textContent = "Correct!";
+        practiceIndex++;
+        setTimeout(renderPractice, 800);
+      } else {
+        $("practiceFeedback").style.color = "var(--bad)";
+        $("practiceFeedback").textContent = `Nog niet. Het juiste antwoord is: ${item.w}`;
+      }
+    }
+
+    function revealPractice() {
+      const item = practiceDeck[practiceIndex];
+      $("practiceFeedback").style.color = "var(--primary-dark)";
+      $("practiceFeedback").textContent = `Antwoord: ${item.w}`;
+      practiceIndex++;
+      setTimeout(renderPractice, 1200);
+    }
+
+    function goHome() { show("home"); }
+    function goResult() { show("result"); }
+  </script>
+</body>
+</html>
